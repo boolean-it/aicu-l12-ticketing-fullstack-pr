@@ -82,9 +82,12 @@ function seedTickets() {
 }
 
 function computeUrgencyLabel(priority, sourceChannel) {
-  // TODO L12: implementare la formula priority + sourceChannel -> urgencyLabel.
-  // Non calcolare questo valore nel client.
-  return null;
+  const labels = {
+    alta:    { telefono: "intervento rapido", chat: "prioritario", email: "prioritario" },
+    normale: { telefono: "da gestire",        chat: "da gestire",  email: "standard"     },
+    bassa:   { telefono: "monitorare",        chat: "monitorare",  email: "monitorare"  }
+  };
+  return labels[priority]?.[sourceChannel] ?? null;
 }
 
 function validateTicketInput(input) {
@@ -102,8 +105,9 @@ function validateTicketInput(input) {
     fieldErrors.priority = "Priorita' non valida.";
   }
 
-  // TODO L12: validare sourceChannel usando validSourceChannels.
-  // Il valore whatsapp deve produrre fieldErrors.sourceChannel.
+  if (!validSourceChannels.includes(input.sourceChannel)) {
+    fieldErrors.sourceChannel = "Canale non valido.";
+  }
 
   return fieldErrors;
 }
@@ -187,6 +191,13 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
+class InvalidJsonError extends Error {
+  constructor() {
+    super("Body JSON non valido.");
+    this.name = "InvalidJsonError";
+  }
+}
+
 async function readJsonBody(request) {
   const chunks = [];
 
@@ -198,7 +209,11 @@ async function readJsonBody(request) {
     return {};
   }
 
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    throw new InvalidJsonError();
+  }
 }
 
 function normalizeTicketInput(body) {
@@ -264,6 +279,10 @@ const server = createServer(async (request, response) => {
 
     serveStatic(request, response);
   } catch (error) {
+    if (error instanceof InvalidJsonError) {
+      sendJson(response, 400, { message: error.message });
+      return;
+    }
     sendJson(response, 500, {
       message: "Errore interno del server.",
       detail: error instanceof Error ? error.message : "Unknown error"
