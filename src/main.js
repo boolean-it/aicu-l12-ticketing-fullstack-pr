@@ -39,6 +39,15 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function renderTickets(tickets) {
   ticketCount.textContent = String(tickets.length);
   emptyPanel.hidden = tickets.length !== 0;
@@ -47,14 +56,14 @@ function renderTickets(tickets) {
     .map(
       (ticket) => `
         <tr>
-          <td><strong class="ticket-id">#${ticket.id}</strong></td>
-          <td>${ticket.title}</td>
-          <td>${ticket.customer}</td>
-          <td><span class="pill priority-${ticket.priority}">${ticket.priority}</span></td>
-          <td>${ticket.sourceChannel}</td>
-          <td><span class="server-value ${ticket.urgencyLabel ? "is-ready" : ""}">${ticket.urgencyLabel || "da calcolare"}</span></td>
+          <td><strong class="ticket-id">#${escapeHtml(ticket.id)}</strong></td>
+          <td>${escapeHtml(ticket.title)}</td>
+          <td>${escapeHtml(ticket.customer)}</td>
+          <td><span class="pill priority-${escapeHtml(ticket.priority)}">${escapeHtml(ticket.priority)}</span></td>
+          <td>${escapeHtml(ticket.sourceChannel)}</td>
+          <td><span class="server-value ${ticket.urgencyLabel ? "is-ready" : ""}">${escapeHtml(ticket.urgencyLabel || "da calcolare")}</span></td>
           <td>
-            <span class="status-pill">${ticket.status}</span>
+            <span class="status-pill">${escapeHtml(ticket.status)}</span>
             <small>${formatDate(ticket.createdAt)}</small>
           </td>
         </tr>
@@ -109,6 +118,9 @@ form.addEventListener("submit", async (event) => {
 
     form.reset();
     updatePayloadPreview();
+    serverFieldPreview.textContent = ticket.urgencyLabel
+      ? `urgencyLabel: ${ticket.urgencyLabel}`
+      : "urgencyLabel: non calcolato";
     await loadTickets();
 
     setStatus(`Ticket ${ticket.id} creato.`, "success");
