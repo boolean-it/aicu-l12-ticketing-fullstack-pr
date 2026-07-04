@@ -82,9 +82,12 @@ function seedTickets() {
 }
 
 function computeUrgencyLabel(priority, sourceChannel) {
-  // TODO L12: implementare la formula priority + sourceChannel -> urgencyLabel.
-  // Non calcolare questo valore nel client.
-  return null;
+  const MAP = {
+    alta: { telefono: "intervento rapido", chat: "prioritario", email: "prioritario" },
+    normale: { telefono: "da gestire", chat: "da gestire", email: "standard" },
+    bassa: { telefono: "monitorare", chat: "monitorare", email: "monitorare" }
+  };
+  return MAP[priority]?.[sourceChannel] ?? null;
 }
 
 function validateTicketInput(input) {
@@ -102,8 +105,9 @@ function validateTicketInput(input) {
     fieldErrors.priority = "Priorita' non valida.";
   }
 
-  // TODO L12: validare sourceChannel usando validSourceChannels.
-  // Il valore whatsapp deve produrre fieldErrors.sourceChannel.
+  if (!validSourceChannels.includes(input.sourceChannel)) {
+    fieldErrors.sourceChannel = "Valore non valido. Usa: email, telefono, chat.";
+  }
 
   return fieldErrors;
 }
