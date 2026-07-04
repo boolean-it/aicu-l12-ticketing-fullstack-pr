@@ -83,3 +83,7 @@ Motivo:
 ```txt
 Sono dati decisi dal server.
 ```
+
+## Nota (L12)
+
+L'esempio "Caso Valido" sopra e' incompleto: contiene `title: ""` e omette `customer`. Con la validazione attuale (`title` >= 3 caratteri, `customer` >= 2 caratteri) il server risponderebbe `400` con `fieldErrors.title` + `fieldErrors.customer`, non `201`. Per un caso valido completo vedere `docs/implement-urgencyLabel.md` sezione "Test manuali".
