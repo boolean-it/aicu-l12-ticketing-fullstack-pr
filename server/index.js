@@ -32,6 +32,7 @@ db.exec(`
 `);
 
 seedTickets();
+backfillUrgencyLabels();
 
 function seedTickets() {
   const count = db.prepare("SELECT COUNT(*) AS count FROM tickets").get().count;
@@ -63,7 +64,7 @@ function seedTickets() {
     "Errore login su account amministrativo.",
     "alta",
     "email",
-    null,
+    computeUrgencyLabel("alta", "email"),
     "aperto",
     now
   );
@@ -75,16 +76,57 @@ function seedTickets() {
     "Errore intermittente nella pagina fatture.",
     "normale",
     "chat",
-    null,
+    computeUrgencyLabel("normale", "chat"),
     "in lavorazione",
     now
   );
 }
 
 function computeUrgencyLabel(priority, sourceChannel) {
-  // TODO L12: implementare la formula priority + sourceChannel -> urgencyLabel.
-  // Non calcolare questo valore nel client.
-  return null;
+  const urgencyLabels = {
+    alta: {
+      telefono: "intervento rapido",
+      chat: "prioritario",
+      email: "prioritario"
+    },
+    normale: {
+      telefono: "da gestire",
+      chat: "da gestire",
+      email: "standard"
+    },
+    bassa: {
+      telefono: "monitorare",
+      chat: "monitorare",
+      email: "monitorare"
+    }
+  };
+
+  return urgencyLabels[priority][sourceChannel];
+}
+
+function backfillUrgencyLabels() {
+  const missingLabels = db
+    .prepare(
+      `
+      SELECT
+        id,
+        priority,
+        source_channel AS sourceChannel
+      FROM tickets
+      WHERE urgency_label IS NULL
+    `
+    )
+    .all();
+
+  const update = db.prepare("UPDATE tickets SET urgency_label = ? WHERE id = ?");
+
+  for (const ticket of missingLabels) {
+    if (!validPriorities.includes(ticket.priority) || !validSourceChannels.includes(ticket.sourceChannel)) {
+      continue;
+    }
+
+    update.run(computeUrgencyLabel(ticket.priority, ticket.sourceChannel), ticket.id);
+  }
 }
 
 function validateTicketInput(input) {
@@ -102,8 +144,9 @@ function validateTicketInput(input) {
     fieldErrors.priority = "Priorita' non valida.";
   }
 
-  // TODO L12: validare sourceChannel usando validSourceChannels.
-  // Il valore whatsapp deve produrre fieldErrors.sourceChannel.
+  if (!validSourceChannels.includes(input.sourceChannel)) {
+    fieldErrors.sourceChannel = "Canale richiesta non valido.";
+  }
 
   return fieldErrors;
 }
