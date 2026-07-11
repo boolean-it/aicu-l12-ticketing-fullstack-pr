@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { validateTicketInput } from "../../server/validation.js"; // o il tuo percorso correttowf
 
 // Questa è la logica di validazione del server che protegge il contratto dei dati
 function validateTicketInput(input) {

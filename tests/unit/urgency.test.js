@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { computeUrgencyLabel } from "../../server/ticket-rules.js"; // o il tuo percorso corretto
 
 // Questa è la regola di business che devo proteggere
 //Nello unit testing isoliamo la funzione pura.
