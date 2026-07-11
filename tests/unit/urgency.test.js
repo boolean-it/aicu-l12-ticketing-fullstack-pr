@@ -25,3 +25,5 @@ test("alta + telefono diventa intervento rapido", () => {
     const label = computeUrgencyLabel("alta", "telefono");
     assert.equal(label, "intervento rapido");
 });
+
+// Aggiornamento per consegna
